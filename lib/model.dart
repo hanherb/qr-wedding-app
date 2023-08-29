@@ -2,7 +2,7 @@ class Invitation {
   final String id;
   final String name;
   final String qrcode;
-  final DateTime? checkInTime;
+  final String? checkInTime;
 
   const Invitation({
     required this.id,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:qr_wedding/generator.dart';
+import 'package:qr_wedding/welcome.dart';
 import 'package:qr_wedding/scanner.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -16,7 +16,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = GeneratorPage();
+        page = WelcomePage();
         break;
       case 1:
         page = ScannerPage();
