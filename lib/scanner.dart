@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_wedding/main.dart';
 import 'package:qr_wedding/qr.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ScannerPage extends StatelessWidget {
   @override
@@ -17,11 +18,11 @@ class ScannerPage extends StatelessWidget {
             children: [
               ElevatedButton(
                 onPressed: () async { 
-                  var checkIn = await appState.checkInEndpoint('4HQZFN19');
-
+                  var checkIn = await appState.checkInEndpoint('A7SYDAS2');
                   if (!context.mounted) return;
+                  if (checkIn == null) _showToast(context, 'Something went wrong');
 
-                  if (checkIn.statusCode != 200) _showToast(context, 'Something went wrong');
+                  // _checkCameraPermission(context);
                   // Navigator.of(context).push(MaterialPageRoute(
                   //   builder: (context) => const QRViewExample(),
                   // ));
@@ -33,6 +34,18 @@ class ScannerPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _checkCameraPermission(context) async {
+    if (await Permission.camera.request().isGranted) {
+      return;
+    }
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.camera,
+    ].request();
+    print(statuses[Permission.camera]);
+
+    return;
   }
 
   void _showToast(BuildContext context, String msg) {

@@ -60,7 +60,7 @@ class _QRViewExampleState extends State<QRViewExample> {
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    var appState = context.watch<MyAppState>();
+    var appState = context.read<MyAppState>();
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) {
       setState(() {
@@ -72,10 +72,8 @@ class _QRViewExampleState extends State<QRViewExample> {
 
   void _onQRScanned(String? resultCode, MyAppState appState) async {
     var checkIn = await appState.checkInEndpoint(resultCode);
-
     if (!context.mounted) return;
-
-    if (checkIn.statusCode != 200) _showToast(context, 'Something went wrong');
+    if (checkIn == null) _showToast(context, 'Something went wrong');
   }
 
   void _showToast(BuildContext context, String msg) {

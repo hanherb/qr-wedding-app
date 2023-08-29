@@ -1,8 +1,12 @@
+import 'dart:convert';
+
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:qr_wedding/homepage.dart';
+import 'package:qr_wedding/model.dart';
+import 'package:dio/dio.dart';
 
 void main() {
   runApp(MyApp());
@@ -46,7 +50,17 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<http.Response> checkInEndpoint(String? userId) async {
-    return await http.post(Uri.parse('http://10.0.2.2:3000/check-in/${userId}'));
+  Future<Invitation?> checkInEndpoint(String? userId) async {
+    final dio = Dio();
+
+    try {
+      final response = await dio.post('http://hanherb.online/api/check-in/$userId');
+
+      return Invitation.fromJson(jsonDecode(response.data.body));
+    }
+    catch(err) {
+      print(err);
+      return null;
+    }
   }
 }
