@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:qr_wedding/main.dart';
 import 'package:qr_wedding/model.dart';
 
 class QRViewExample extends StatefulWidget {
@@ -37,20 +35,14 @@ class _QRViewExampleState extends State<QRViewExample> {
             ),
             title: Text('My App'),
           ),
-          Expanded(
-            flex: 5,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-            ),
-          ),
+          Expanded(flex: 5, child: _buildQrView(context)),
           Expanded(
             flex: 1,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                   if (result != null)
-                    Text('Barcode Type: QR - Data: ${result!.code}')
+                    Text('QR - Data: ${result!.code}')
                   else
                     const Text('Scan a code'),
               ]
@@ -58,6 +50,26 @@ class _QRViewExampleState extends State<QRViewExample> {
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildQrView(BuildContext context) {
+    // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
+    var scanArea = (MediaQuery.of(context).size.width < 400 ||
+            MediaQuery.of(context).size.height < 400)
+        ? 150.0
+        : 300.0;
+    // To ensure the Scanner view is properly sizes after rotation
+    // we need to listen for Flutter SizeChanged notification and update controller
+    return QRView(
+      key: qrKey,
+      onQRViewCreated: _onQRViewCreated,
+      overlay: QrScannerOverlayShape(
+          borderColor: Colors.red,
+          borderRadius: 10,
+          borderLength: 30,
+          borderWidth: 10,
+          cutOutSize: scanArea),
     );
   }
 
@@ -88,26 +100,27 @@ class _QRViewExampleState extends State<QRViewExample> {
   }
 
   void _onQRViewCreated(QRViewController controller) {
-    var appState = context.read<MyAppState>();
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) {
       setState(() {
         result = scanData;
-        _onQRScanned(result!.code, appState);
+        _onQRScanned(result!.code);
       });
     });
   }
 
-  void _onQRScanned(String? resultCode, MyAppState appState) async {
+  void _onQRScanned(String? resultCode) async {
     var (checkIn, errMsg) = await checkInEndpoint(resultCode);
     if (!context.mounted) return;
 
     if (checkIn == null) {
-      _showToast(context, errMsg);
+      _failedDialog(context, errMsg);
     }
     else {
-      _showDialog(context, checkIn);
+      _successDialog(context, checkIn);
     }
+
+    await controller!.pauseCamera();
   }
 
   void _showToast(BuildContext context, String msg) {
@@ -121,7 +134,7 @@ class _QRViewExampleState extends State<QRViewExample> {
     );
   }
 
-  void _showDialog(BuildContext context, Invitation payload) {
+  void _successDialog(BuildContext context, Invitation payload) {
     showDialog(context: context, builder: (BuildContext context){
       return AlertDialog(
         title: Center(child: Text("Welcome!")),
@@ -137,6 +150,29 @@ class _QRViewExampleState extends State<QRViewExample> {
         actions: [
           Center(
             child: ElevatedButton(onPressed: () {
+              controller!.resumeCamera();
+              Navigator.of(context).pop();
+            }, child: Text("Close")),
+          )
+        ],
+      );
+    });
+  }
+
+  void _failedDialog(BuildContext context, String msg) {
+    showDialog(context: context, builder: (BuildContext context){
+      return AlertDialog(
+        title: Center(child: Text("Sorry..")),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(child: Text(msg))
+          ],
+        ),
+        actions: [
+          Center(
+            child: ElevatedButton(onPressed: () {
+              controller!.resumeCamera();
               Navigator.of(context).pop();
             }, child: Text("Close")),
           )
